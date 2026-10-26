@@ -21,12 +21,16 @@
 #define BEACON_IES_OFFSET 36
 #define FCS_LENGTH 4
 #define SSID_MAX_LENGTH 32
+#define SSID_ELEMENT_ID 0
+#define DS_PARAMS_ELEMENT_ID 3
+#define HT_OPERATION_ELEMENT_ID 61
 
 typedef struct {
     uint8_t bssid[6];
     uint8_t ssid[SSID_MAX_LENGTH];
     uint8_t ssid_length;
-    uint8_t channel;
+    uint8_t rx_channel;
+    uint8_t ap_channel; // Zero when the beacon does not advertise a channel.
     int8_t rssi;
     bool has_ssid;
 } beacon_event_t;
@@ -47,13 +51,14 @@ static void on_packet(void *buffer, wifi_promiscuous_pkt_type_t type)
     }
 
     beacon_event_t event = {
-        .channel = packet->rx_ctrl.channel,
+        .rx_channel = packet->rx_ctrl.channel,
         .rssi = packet->rx_ctrl.rssi,
     };
     memcpy(event.bssid, frame + 16, sizeof(event.bssid)); // Address 3 is the BSSID.
 
     // Tagged parameters use [element ID, length, value...]. Exclude the FCS.
     const size_t ie_end = frame_length - FCS_LENGTH;
+    bool has_ds_channel = false;
     for (size_t offset = BEACON_IES_OFFSET; offset + 2 <= ie_end;) {
         const uint8_t element_id = frame[offset];
         const uint8_t element_length = frame[offset + 1];
@@ -61,14 +66,26 @@ static void on_packet(void *buffer, wifi_promiscuous_pkt_type_t type)
         if (element_length > ie_end - offset) {
             return; // Truncated or malformed information element.
         }
-        if (element_id == 0) {
+        if (element_id == SSID_ELEMENT_ID) {
             if (element_length > SSID_MAX_LENGTH) {
                 return;
             }
             event.has_ssid = true;
             event.ssid_length = element_length;
             memcpy(event.ssid, frame + offset, element_length);
-            break;
+        } else if (element_id == DS_PARAMS_ELEMENT_ID && element_length == 1) {
+            const uint8_t channel = frame[offset];
+            if (channel >= 1 && channel <= 14) {
+                event.ap_channel = channel;
+                has_ds_channel = true;
+            }
+        } else if (element_id == HT_OPERATION_ELEMENT_ID && element_length >= 1 &&
+                   !has_ds_channel) {
+            // HT Operation's first byte is the primary channel. DS Parameters wins.
+            const uint8_t channel = frame[offset];
+            if (channel >= 1 && channel <= 14) {
+                event.ap_channel = channel;
+            }
         }
         offset += element_length;
     }
@@ -146,9 +163,15 @@ void app_main(void)
         beacon_event_t event;
         if (xQueueReceive(beacon_queue, &event, pdMS_TO_TICKS(100)) == pdTRUE) {
             char ssid[SSID_MAX_LENGTH * 4 + 1];
+            char ap_channel[4];
             format_ssid(&event, ssid, sizeof(ssid));
-            printf("[CH %2u] BEACON RSSI:%d BSSID:%02X:%02X:%02X:%02X:%02X:%02X SSID:%s\n",
-                   (unsigned)event.channel, (int)event.rssi,
+            if (event.ap_channel == 0) {
+                snprintf(ap_channel, sizeof(ap_channel), "-");
+            } else {
+                snprintf(ap_channel, sizeof(ap_channel), "%u", (unsigned)event.ap_channel);
+            }
+            printf("[RX CH %2u] [AP CH %2s] BEACON RSSI:%d BSSID:%02X:%02X:%02X:%02X:%02X:%02X SSID:%s\n",
+                   (unsigned)event.rx_channel, ap_channel, (int)event.rssi,
                    event.bssid[0], event.bssid[1], event.bssid[2],
                    event.bssid[3], event.bssid[4], event.bssid[5], ssid);
         }
