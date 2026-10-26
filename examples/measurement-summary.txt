@@ -1,0 +1,23 @@
+=== SUMMARY elapsed_s=300 processed=1829 queue_dropped=0 unique_bssids=4 bssid_table_full=0 ===
+TYPE Management=1412 Control=343 Data=74
+SUBTYPE Beacon=1371 ProbeReq=10 ProbeResp=29 ACK=79 RTS=156 CTS=43 Data=4 QoSData=6
+CH  1 dwell_ms=27620 total=380 mgmt=378 ctrl=2 data=0 beacon=356 bssids=2
+CH  2 dwell_ms=27310 total=2 mgmt=2 ctrl=0 data=0 beacon=0 bssids=0
+CH  3 dwell_ms=27300 total=3 mgmt=2 ctrl=1 data=0 beacon=0 bssids=0
+CH  4 dwell_ms=27310 total=0 mgmt=0 ctrl=0 data=0 beacon=0 bssids=0
+CH  5 dwell_ms=27410 total=219 mgmt=191 ctrl=27 data=1 beacon=187 bssids=1
+CH  6 dwell_ms=27470 total=591 mgmt=236 ctrl=282 data=73 beacon=227 bssids=1
+CH  7 dwell_ms=27490 total=234 mgmt=209 ctrl=25 data=0 beacon=209 bssids=1
+CH  8 dwell_ms=27300 total=0 mgmt=0 ctrl=0 data=0 beacon=0 bssids=0
+CH  9 dwell_ms=27310 total=0 mgmt=0 ctrl=0 data=0 beacon=0 bssids=0
+CH 10 dwell_ms=26810 total=196 mgmt=196 ctrl=0 data=0 beacon=196 bssids=1
+CH 11 dwell_ms=26700 total=204 mgmt=198 ctrl=6 data=0 beacon=196 bssids=1
+RSSI <-90 dBm=390
+RSSI -90..-81 dBm=619
+RSSI -80..-71 dBm=820
+RSSI -70..-61 dBm=0
+RSSI -60..-51 dBm=0
+RSSI -50..-41 dBm=0
+RSSI -40..-31 dBm=0
+RSSI >=-30 dBm=0
+=== END SUMMARY ===

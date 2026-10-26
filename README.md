@@ -1,6 +1,6 @@
 # XIAO ESP32C3 Wi-Fi beacon sniffer
 
-ESP-IDF の Promiscuous Mode で、アクセスポイントに接続せずに Beacon フレームを観測します。SSID、BSSID、RSSI、受信チャンネル、AP が広告するチャンネルを USB シリアルに表示する最初の実験です。
+ESP-IDF の Promiscuous Mode で、アクセスポイントに接続せずに 2.4 GHz 帯のフレームを観測します。Beacon の SSID・BSSID・RSSI・受信/広告チャンネルを表示し、Management / Control / Data の種類別件数、チャンネル別件数、RSSI 分布を集計します。
 
 ## 実行
 
@@ -23,4 +23,18 @@ pio device monitor -b 115200
 
 SSID が非公開の場合は `<hidden>`、情報要素がない場合は `<missing>` と表示します。制御文字や非 ASCII の SSID バイトは `\xHH` 形式で表示します。
 
-ESP32-C3 の Wi-Fi は 2.4 GHz 帯のみです。チャンネルを巡回するため、観測数はその帯域の全フレーム数を表しません。実測値を公開するときは、自分が管理する AP・端末を中心に観測し、BSSID などの識別子を匿名化してください。
+Beacon の個別行は、BSSID と受信チャンネルの組み合わせにつき最初の1件だけ、最大48行を表示します。Data フレームの送信元・宛先アドレスも `To DS` / `From DS` の組み合わせごとに最初の1件だけ表示します。ペイロードは保存・表示しません。
+
+60秒ごとに累積 `SUMMARY` を表示します。`TYPE` は3種類の件数、`SUBTYPE` は主なサブタイプ、`CH` は受信チャンネル別の観測時間・件数・Beaconで見えたBSSID数、`RSSI` は全種類の受信フレームの分布です。`queue_dropped` は処理用キューからあふれた件数です。これが0以外なら集計に欠落があります。5分間の測定には `elapsed_s=300` のレポートを使います。
+
+識別子を含む個別行を除外して集計だけをPCに表示する場合は、PlatformIO の Python 環境で次を実行します。
+
+```sh
+~/.platformio/penv/bin/python tools/capture_summary.py --port /dev/ttyACM0
+```
+
+接続ポートが異なる場合は `--port` を変更してください。ヘッダ解析のホスト側テストは `cc -std=c11 -Isrc test/frame_parser_test.c src/frame_parser.c -o /tmp/frame_parser_test` でビルドできます。
+
+[2026-10-26の5分間検証結果](docs/verification-2026-10-26.md)には、識別子を含まない集計値と未検証項目をまとめています。
+
+ESP32-C3 の Wi-Fi は 2.4 GHz 帯のみです。チャンネルを巡回するため、観測数はその帯域の全フレーム数を表しません。受信チャンネルが重なって同じAPのフレームを隣接チャンネルで数えることもあります。実測値を公開するときは、自分が管理する AP・端末を中心に観測し、SSIDやMACアドレスなどの識別子を匿名化してください。
