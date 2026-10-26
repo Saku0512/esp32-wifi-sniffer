@@ -13,10 +13,10 @@ pio device monitor -b 115200
 
 シリアルポートが自動検出されない場合は、`pio device list` で確認して `--port` を指定してください。
 
-出力例（架空の値）:
+出力例（[実測ログの匿名化抜粋](examples/serial-output.txt)。SSID と BSSID を置き換え、重複行を省略）:
 
 ```text
-[RX CH  1] [AP CH  1] BEACON RSSI:-45 BSSID:12:34:56:78:9A:BC SSID:MyWiFi
+[RX CH  5] [AP CH  6] BEACON RSSI:-72 BSSID:02:00:00:00:00:01 SSID:ExampleAP-6
 ```
 
 チャンネル 1〜11 を約 700 ms ごとに切り替えます。`RX CH` は実際に受信したチャンネル、`AP CH` は Beacon の DS Parameters（なければ HT Operation）に記載されたプライマリチャンネルです。どちらの情報要素もない場合、`AP CH` は `-` と表示します。隣接するチャンネルで同じ AP を受信することもあります。
